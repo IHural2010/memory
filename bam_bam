@@ -1,0 +1,121 @@
+from pygame import *
+from random import randint
+font.init()
+lost = 0
+score = 0
+
+window = display.set_mode((700, 500))
+display.set_caption("Shuter")
+background = transform. scale(image. load("m.jpg"), (700, 500))
+
+class GameSprite(sprite.Sprite):
+    def __init__(self, pic, x, y,height,width, speed):
+        super().__init__()
+        self.image = transform.scale(image.load(pic), (width, height))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y 
+        self.speed = speed
+    def reset(self):
+        window.blit(self.image, (self.rect.x, self.rect.y))
+class Player(GameSprite):
+    def update(self):
+            keys = key.get_pressed()
+            
+            if keys[K_LEFT] and self.rect.x > 5:
+                self.rect.x -= self.speed
+        
+            if keys[K_RIGHT] and self.rect.x < 595:
+                self.rect.x += self.speed
+               
+    def fire(self):
+        bullet = Bullet("bullet.png", self.rect.centerx,self.rect.top,10,20,-15)
+        
+        bullets.add(bullet)
+bullets = sprite.Group()    
+class Enemy(GameSprite):
+    def update(self):
+        self.rect.y += 4
+        global lost 
+        if self.rect.y >= 450:
+            self.rect.x = randint(5, 500)
+            self.rect.y = 0
+            lost += 1
+            
+class Bullet(GameSprite):
+    def update (self):
+        self.rect.y += self.speed
+        if self.rect.y < 0:
+            self.kill()
+
+nemonsters = sprite.Group()
+
+monsters = sprite.Group()
+for x in range(5):
+    enemy1 = Enemy("ufo.png", randint(0,600), 0,100 ,100,5 )
+    monsters.add(enemy1)
+rocket = Player("rocket.png", 150, 350,90,100,10)
+for x in range (5):
+    enemy = Enemy("asteroid.png", randint(0,600), 0,100 ,100,5 )
+    nemonsters.add(enemy)    
+
+
+
+finish = False
+clock =time.Clock()
+FPS = 40
+#mixer.init()
+#mixer.music.load("")
+#mixer.music.play()
+game = True
+font1 = font.Font(None, 80)
+win = font1.render("you win", True,(200,0,200))
+lose = font1.render("you lose", True,(200,0,200))
+while game:
+    for e in event.get():
+        if e.type ==QUIT:
+            game = False
+        elif e.type == KEYDOWN:
+            if e.key == K_SPACE:
+                rocket.fire()
+
+    if finish != True:
+        text_lose = font.Font(None, 36).render("Propusheno:" + str(lost),1, (255,255,255))
+        score_txt =font.Font(None, 36).render("Rahunok:" + str(score),1, (255,255,255))
+        window.blit(background,(0, 0))
+        window.blit (text_lose, (10,40)) 
+        window.blit(score_txt, (10,10))
+        rocket.update()
+        rocket.reset()
+        bullets.update()
+        bullets.draw(window)    
+        monsters.update()
+        monsters.draw(window)
+        nemonsters.update()
+        nemonsters.draw(window)
+    sprite_colide = sprite.groupcollide(monsters, bullets, True, True)
+    for t in sprite_colide:
+        score += 1
+        enemy1 = Enemy("ufo.png", randint(0,700), 0,100 ,100,5 )
+        monsters.add(enemy1)
+    sprite_colide1 = sprite.groupcollide(nemonsters, bullets, True, True)
+    for m in sprite_colide:
+   
+        enemy = Enemy("asteroid.png", randint(0,700), 0,100 ,100,5 )
+        nemonsters.add(enemy)
+    if sprite.spritecollide (rocket, monsters,False) or lost >=10:
+        finish = True
+        window.blit(lose, (200,200))
+    if score>= 10:
+        finish = True
+        window.blit(win, (200,200))     
+
+
+
+   
+
+    display.update()            
+    time.delay(FPS)
+
+
+
